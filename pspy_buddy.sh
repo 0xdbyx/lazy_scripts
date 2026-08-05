@@ -10,6 +10,8 @@
 #
 # For a known log, a direct search may be enough:
 #   grep -nF -- 'tar -zxf /tmp/backup.tar.gz *' /var/log/syslog
+#
+# To use script ./pspy_buddy.sh "tar -zxf /tmp/backup.tar.gz *"
 
 SEARCH="${1:-}"
 
