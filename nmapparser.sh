@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Usage:
-#   ./nmapparse.sh nmap.txt
-#   ./nmapparse.sh nmap.txt summary.md
+#   ./nmapparser.sh nmap.txt
+#   ./nmapparser.sh nmap.txt summary.md
 
 set -euo pipefail
 
