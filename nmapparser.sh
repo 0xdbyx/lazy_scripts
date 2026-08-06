@@ -19,33 +19,61 @@ if [[ ! -f "$INPUT_FILE" ]]; then
 fi
 
 awk '
-BEGIN {
-    print "| Host | Open Ports |"
-    print "|---|---|"
-}
-/^Nmap scan report for / {
-    if (host != "") {
-        if (ports == "") ports = "None"
-        print "| " host " | " ports " |"
+function save_host() {
+    if (host == "") {
+        return
     }
+
+    host_count++
+    hosts[host_count] = host
+    ports_only[host_count] = (current_ports_only == "" ? "None" : current_ports_only)
+    ports_protocol[host_count] = (current_ports_protocol == "" ? "None" : current_ports_protocol)
+}
+
+/^Nmap scan report for / {
+    save_host()
 
     host = $NF
     gsub(/[()]/, "", host)
-    ports = ""
+
+    current_ports_only = ""
+    current_ports_protocol = ""
     next
 }
 
 /^[0-9]+\/(tcp|udp)[[:space:]]+open[[:space:]]/ {
-    if (ports == "")
-        ports = $1
-    else
-        ports = ports ", " $1
+    split($1, port_parts, "/")
+    port_number = port_parts[1]
+
+    if (current_ports_only == "") {
+        current_ports_only = port_number
+        current_ports_protocol = $1
+    } else {
+        current_ports_only = current_ports_only ", " port_number
+        current_ports_protocol = current_ports_protocol ", " $1
+    }
 }
 
 END {
-    if (host != "") {
-        if (ports == "") ports = "None"
-        print "| " host " | " ports " |"
+    save_host()
+
+    print "## Open ports"
+    print ""
+    print "| Host | Open Ports |"
+    print "|---|---|"
+
+    for (i = 1; i <= host_count; i++) {
+        print "| " hosts[i] " | " ports_only[i] " |"
+    }
+
+    print ""
+    print "## Open ports with protocol"
+    print ""
+    print "| Host | Open Ports |"
+    print "|---|---|"
+
+    for (i = 1; i <= host_count; i++) {
+        print "| " hosts[i] " | " ports_protocol[i] " |"
     }
 }
 ' "$INPUT_FILE" > "$OUTPUT_FILE"
