@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# I am too lazy to scroll through the Mimikatz output
+# I am too lazy to scroll through the Mimikatz output.
+# Place the output in mimikatz.log, then run: ./mimikatzparser.sh
 
 LOGFILE="mimikatz.log"
 
@@ -11,12 +12,26 @@ PASS_FILE="passwords.txt"
 USER_NTLM_FILE="creds_user_ntlm.txt"
 USER_PASS_FILE="creds_user_pass.txt"
 
+if [[ ! -f "$LOGFILE" ]]; then
+    echo "[!] File not found: $LOGFILE" >&2
+    exit 1
+fi
+
+# Restrict generated credential files to the current user.
+umask 077
+
 # Temporary files
 TMP_USERS=$(mktemp)
 TMP_NTLM=$(mktemp)
 TMP_PASS=$(mktemp)
 TMP_USER_NTLM=$(mktemp)
 TMP_USER_PASS=$(mktemp)
+
+cleanup() {
+    rm -f "$TMP_USERS" "$TMP_NTLM" "$TMP_PASS" \
+        "$TMP_USER_NTLM" "$TMP_USER_PASS"
+}
+trap cleanup EXIT INT TERM
 
 current_user=""
 
@@ -73,9 +88,6 @@ sort -u "$TMP_NTLM" > "$NTLM_FILE"
 sort -u "$TMP_PASS" > "$PASS_FILE"
 sort -u "$TMP_USER_NTLM" > "$USER_NTLM_FILE"
 sort -u "$TMP_USER_PASS" > "$USER_PASS_FILE"
-
-# Cleanup
-rm "$TMP_USERS" "$TMP_NTLM" "$TMP_PASS" "$TMP_USER_NTLM" "$TMP_USER_PASS"
 
 echo "[+] Unique usernames saved to $USERS_FILE"
 echo "[+] Unique NTLM hashes saved to $NTLM_FILE"
