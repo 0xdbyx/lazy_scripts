@@ -1,0 +1,7 @@
+mimikatz.log
+usernames.txt
+ntlm_hashes.txt
+passwords.txt
+creds_user_ntlm.txt
+creds_user_pass.txt
+nmap_summary.md
