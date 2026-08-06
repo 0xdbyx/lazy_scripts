@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # pspy_buddy.sh
 #
 # pspy may show only part of a command:
@@ -11,17 +10,17 @@
 # For a known log, a direct search may be enough:
 #   grep -nF -- 'tar -zxf /tmp/backup.tar.gz *' /var/log/syslog
 #
-# To use script ./pspy_buddy.sh "tar -zxf /tmp/backup.tar.gz *"
+# Usage: ./pspy_buddy.sh "tar -zxf /tmp/backup.tar.gz *"
 
 SEARCH="${1:-}"
-
 if [[ -z "$SEARCH" ]]; then
-    echo "Usage: $0 <search_term>"
-    echo "Example: sudo $0 'tar -zxf /tmp/backup.tar.gz'"
+    echo "Usage: $0 <search_term>" >&2
+    echo "Example: sudo $0 'tar -zxf /tmp/backup.tar.gz'" >&2
     exit 1
 fi
 
 echo "[*] Searching for: $SEARCH"
+echo "[*] Searching logs and common system locations. This may take some time."
 echo "=================================================="
 
 check() {
@@ -31,7 +30,6 @@ check() {
     # Loop through all files expanded from wildcards.
     for location in "$@"; do
         [[ -e "$location" ]] || continue
-
         if [[ -f "$location" && "$location" == *.gz ]]; then
             # Compressed logs.
             matches=$(zgrep -HnF -- "$SEARCH" "$location" 2>/dev/null || true)
@@ -44,7 +42,6 @@ check() {
             # Normal files.
             matches=$(grep -HnIF -- "$SEARCH" "$location" 2>/dev/null || true)
         fi
-
         if [[ -n "$matches" ]]; then
             echo "[+] FOUND in $location"
             echo "$matches" | sed 's/^/    /'
