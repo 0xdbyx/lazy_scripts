@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Usage:
 #   ./nmapparser.sh nmap.txt
 #   ./nmapparser.sh nmap.txt summary.md
@@ -10,46 +9,43 @@ INPUT_FILE="${1:-}"
 OUTPUT_FILE="${2:-nmap_summary.md}"
 
 if [[ -z "$INPUT_FILE" ]]; then
-    echo "Usage: $0 <nmap-output.txt> [output.md]"
+    echo "Usage: $0 <nmap-output.txt> [output.md]" >&2
     exit 1
 fi
 
 if [[ ! -f "$INPUT_FILE" ]]; then
-    echo "[!] File not found: $INPUT_FILE"
+    echo "[!] File not found: $INPUT_FILE" >&2
     exit 1
 fi
 
 awk '
 BEGIN {
-    print "| IP | Open Ports |"
+    print "| Host | Open Ports |"
     print "|---|---|"
 }
-
 /^Nmap scan report for / {
-    if (ip != "") {
+    if (host != "") {
         if (ports == "") ports = "None"
-        print "| " ip " | " ports " |"
+        print "| " host " | " ports " |"
     }
 
-    ip = $NF
-    gsub(/[()]/, "", ip)
+    host = $NF
+    gsub(/[()]/, "", host)
     ports = ""
     next
 }
 
 /^[0-9]+\/(tcp|udp)[[:space:]]+open[[:space:]]/ {
-    split($1, p, "/")
-
     if (ports == "")
-        ports = p[1]
+        ports = $1
     else
-        ports = ports ", " p[1]
+        ports = ports ", " $1
 }
 
 END {
-    if (ip != "") {
+    if (host != "") {
         if (ports == "") ports = "None"
-        print "| " ip " | " ports " |"
+        print "| " host " | " ports " |"
     }
 }
 ' "$INPUT_FILE" > "$OUTPUT_FILE"
